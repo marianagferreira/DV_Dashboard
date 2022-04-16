@@ -1,6 +1,6 @@
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 from dash.dependencies import Input, Output, State
 import numpy as np
 import pandas as pd
@@ -13,7 +13,7 @@ import plotly.graph_objs as go
 #########################################
 # Dataset types of conflicts
 df_conflicts = pd.read_csv(  # Change this to the path of your computer
-    "C:/Users/tsoom/OneDrive/Documentos/IMS - Data Science/2º Semester/Data Visualization/Github/CSVs/types_of_conflicts.csv")
+    r"C:\Users\Administrador\OneDrive - NOVAIMS\Mestrado\Data Visualization\Project\CSVs\types_of_conflicts.csv")
 
 df_conflicts.drop(columns=['Code'], inplace=True)  # drop the column 'Code' --> not necessary for our analysis
 
@@ -33,7 +33,7 @@ df_conflicts['total number of conflicts'] = df_conflicts['civil-foreign conflict
 #############################################
 # Dataset for world deaths
 df_deaths = pd.read_csv(
-    "C:/Users/tsoom/OneDrive/Documentos/IMS - Data Science/2º Semester/Data Visualization/Github/CSVs/deaths-from-conflict-and-terrorism.csv")
+    r"C:\Users\Administrador\OneDrive - NOVAIMS\Mestrado\Data Visualization\Project\CSVs\deaths-from-conflict-and-terrorism.csv")
 df_deaths.drop(columns=['Code'], inplace=True)
 df_deaths.rename(columns={'Entity': 'Country',
                           'Year': 'year',
@@ -59,9 +59,10 @@ regions = ['World', 'Eastern Mediterranean Region', 'North Africa and Middle Eas
            'East Asia & Pacific - World Bank region',
            'High SDI', 'High-income North America', 'North America']
 
-deaths = df_deaths[~df_deaths.Country.isin(regions)]
+df_deaths = df_deaths[~df_deaths.Country.isin(regions)]
+df_deaths.replace("Democratic Republic of Congo", "DR of Congo", inplace = True)
+df_deaths.replace("Bosnia and Herzegovina", "Bosnia and Herz", inplace = True)
 
-deaths_df = pd.pivot_table(deaths, values='Total Deaths', index='Country', columns='year')
 
 #######################################
 colors = ['#B6E880', '#FF97FF', '#FECB52', '#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A', '#19D3F3', '#FF6692']
@@ -171,19 +172,19 @@ app.layout = html.Div([
                     html.Br(),
                     html.Label(
                         'Choose the world regions you want to examine and also the type of conflict, and the years to focus on.....'),
-                ], style={'width': '240px', 'padding-left': '20px'}),
+                ], style={'width': '240px', 'padding-left': '20px'}, className='text'),
 
                 html.Div([  # dropdown Country Choice
                     html.Br(),
                     html.Label('World Region Choice'),
                     dropdown_world_regions,
-                ], style={'width': '53%', 'padding-left': '15px'}),
+                ], style={'width': '53%', 'padding-left': '15px'}, className='dash-dropdown'),
 
                 html.Div([  # dropdown type of conflict
                     html.Br(),
                     html.Label('Type of Conflict Choice'),
                     dropdown_types_of_conflicts,
-                ], style={'width': '20%', 'padding-left': '15px', 'padding-right': '5px'}),
+                ], style={'width': '20%', 'padding-left': '15px', 'padding-right': '5px'}, className='dash-dropdown'),
 
             ], style={'display': 'flex', 'height': '10%'}),
 
@@ -191,7 +192,7 @@ app.layout = html.Div([
             html.Div([  # second part --> range slider (10%)
                 html.Br(),
                 range_slider,
-            ], style={'height': '10%', 'width': '85%', 'padding-left': '90px'}),  # , 'padding-bottom': '10px'}),
+            ], style={'height': '10%', 'width': '85%', 'padding-left': '90px'}, className='year_slider'),
 
         ], style={'width': '88%'}, className='box_filters'),
 
@@ -219,8 +220,8 @@ app.layout = html.Div([
         html.Div([
             html.Label('Now let´s take a look at the number of deaths due to all this conflicts since 1990 until 2019... \
             Choose the layout of yeh map that you prefer...'),
-        ], style={'padding-left': '10px', 'margin-left': '155px', 'border-radius': '8px',
-                  'background-color': '#d3ccc3'}),
+        ], style={'padding-left': '10px', 'margin-left': '155px', 'border-radius': '8px', 'padding': '10px',
+                  'background-color': '#DFDFB1'}),
         html.Br(),
 
         ####################################################################
@@ -230,22 +231,22 @@ app.layout = html.Div([
 
                 html.Div([
                     radio_projection,
-                ], className='box', style={'padding-left': '250px'}),
+                ], className='box', style={'padding-left': '250px', 'margin-left': '200px', 'padding': '3px'}),
                 dcc.Graph(id='world_map'),
                 html.Br(),
                 html.Div([  # fifth part --> normal slider (10%)
                     normal_slider,
                     html.Br(),
-                ], style={'height': '10%', 'width': '90%', 'padding-left': '40px'}),
+                ], style={'height': '10%', 'width': '90%', 'padding-left': '40px'}, className='year_slider'),
             ], className="box", style={'width': '70%'}),
 
             html.Div([  # top_countries on the right
-                dcc.Graph(id='top_countries_graph', className="box"),
-            ], style={'width': '35%', 'height': '150%'}),
+                dcc.Graph(id='top_countries_graph'),
+            ], style={'width': '35%', 'height': '250%'}, className='box'),
 
         ], style={'display': 'flex', 'height': '40%', 'padding-left': '145px'}),
 
-    ], style={'display': 'inline-block', 'height': '65%', 'width': '95%', 'padding-left': '50px'}),
+    ], style={'display': 'inline-block', 'height': '65%', 'width': '90%', 'padding-left': '125px'}, className='main'),
 
 ])
 
@@ -431,38 +432,21 @@ def plots(projection, year):
 
     #######################################################################################
     # Fourth Visualization: Bar Chart 2
-    fig_bar_data2 = []
-
-    # Each year defines a new hidden (implies visible=False) trace in our visualization
-    for year in deaths_df.columns:  # year is an integer number
-        fig_bar_data2.append(dict(data=dict(type='bar',
-                                            x=deaths_df.sort_values(by=year, ascending=False).iloc[:5, :].index,
-                                            # countries
-                                            y=deaths_df.sort_values(by=year, ascending=False).iloc[:5, :][year],
-                                            # values for that year
-                                            name=year,
-                                            marker=dict(color='#9F9F5F'),
-                                            showlegend=False
-                                            ),
-                                  # visible=False,
-                                  layout=go.Layout(
-                                      dict(title_text=f'Countries with the highest number of deaths in {str(year)}'))
-                                  ))
+    bar_chart2 = (dict(data=dict(type='bar', y=filter_df2.sort_values(by='Total Deaths', ascending=False).iloc[:5, :].index,
+                          x=filter_df2.sort_values(by='Total Deaths', ascending=False).iloc[:5, :]['Total Deaths'],
+                          orientation='h'
+                          ),
+                # visible=False,
+                layout=go.Layout(dict(title_text=f'Countries with the highest number of deaths'))
+                ))
 
     fig_bar_layout2 = dict(
         title=dict(text=f'Countries with the highest number of deaths'),
-        yaxis=dict(title='Number of Deaths', range=[0, 200000]),  # change the range !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        yaxis=dict(title='Number of Deaths', range=[0, 200000]) # change the range !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     )
 
-    initial_data2 = dict(type='bar',
-                         x=deaths_df.sort_values(by=year, ascending=False).iloc[:5, :].index,
-                         y=deaths_df.sort_values(by=year, ascending=False).iloc[:5, :][2000],
-                         marker=dict(color='orange'),
-                         name=str(1990)
-                         )
-
     return go.Figure(data=data_choropleth, layout=layout_choropleth), \
-           go.Figure(data=initial_data2, layout=fig_bar_layout2, frames=fig_bar_data2)
+           go.Figure(data=bar_chart2, layout=fig_bar_layout2)
 
 
 ############################################################
